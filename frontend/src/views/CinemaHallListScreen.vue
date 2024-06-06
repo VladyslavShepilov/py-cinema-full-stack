@@ -45,7 +45,7 @@ export default {
     },
 
     handleHallCreate () {
-      location.hash = '#/cinema-halls?add=true';
+      location.hash = '/cinema-halls?add=true';
     },
 
     hashHandler () {

@@ -3,19 +3,20 @@
     <date-picker @input="handleDateSelection"></date-picker>
     <div class="movie-container" v-if="movieSessions.length">
       <movie-card
-      v-for="(session, index) in movieSessionsGroupedByTime"
-      :key="index"
-      :id="session.id"
-      :title="session.movie_title"
-      :image="session.movie_image"
-      :times="session.times"
-      @open-details="handleMovieSessionDetails"></movie-card>
+        v-for="(session, index) in movieSessionsGroupedByTime"
+        :key="index"
+        :id="session.id"
+        :title="session.movie_title"
+        :image="getImageUrl(session.movie_image)" <!-- Pass the image URL -->
+        :times="session.times"
+        @open-details="handleMovieSessionDetails"
+      ></movie-card>
     </div>
     <div v-else class="no-sessions">No movie sessions for selected date.</div>
     <add-btn
       v-if="isStaff"
-      @click="handleMovieCreate">
-    </add-btn>
+      @click="handleMovieCreate"
+    ></add-btn>
   </div>
 </template>
 
@@ -33,17 +34,19 @@ export default {
       default: false
     }
   },
-  data: () => ({
-    active: false,
-    movieSessions: [],
-    actors: [],
-    genres: [],
-    selectedActorIds: [],
-    selectedGenreIds: [],
-    date: moment(new Date()).format('YYYY-MM-DD')
-  }),
+  data() {
+    return {
+      active: false,
+      movieSessions: [],
+      actors: [],
+      genres: [],
+      selectedActorIds: [],
+      selectedGenreIds: [],
+      date: moment(new Date()).format('YYYY-MM-DD')
+    };
+  },
   computed: {
-    movieSessionsGroupedByTime () {
+    movieSessionsGroupedByTime() {
       return this.movieSessions.reduce((modifiedArr, item) => {
         const movieIndex = modifiedArr.findIndex(session => session.movie_title === item.movie_title);
         if (movieIndex > -1) {
@@ -61,29 +64,29 @@ export default {
       }, []);
     },
 
-    token () {
+    token() {
       return localStorage.getItem('access');
     }
   },
   methods: {
-    hashHandler () {
+    hashHandler() {
       this.active = Boolean(location.hash.match('movie-sessions$'));
     },
 
-    handleMovieSessionDetails (sessionId) {
+    handleMovieSessionDetails(sessionId) {
       location.hash = `#/movie-sessions/${sessionId}`;
     },
 
-    handleMovieCreate () {
+    handleMovieCreate() {
       location.hash = '#/movie-sessions?add=true';
     },
 
-    handleDateSelection (date) {
+    handleDateSelection(date) {
       this.date = date;
       this.fetchMovieSessionsByDate();
     },
 
-    async fetchMovieSessionsByDate () {
+    async fetchMovieSessionsByDate() {
       try {
         const { data: movieSessions } = await this.axios.get(`${import.meta.env.VITE_API_URL}/api/cinema/movie_sessions/`, {
           headers: { Authorization: `Bearer ${this.token}` },
@@ -96,21 +99,21 @@ export default {
       } catch (err) {
         console.error(err.response.data);
       }
-    }
+    },
 
-  },
-  async mounted () {
-    window.addEventListener('hashchange', this.hashHandler);
-    this.hashHandler();
-  },
-  watch: {
-    active () {
-      if (this.active) {
-        this.fetchMovieSessionsByDate();
+    getImageUrl(imageName) {
+      if (imageName) {
+        return `${import.meta.env.VITE_API_URL}/media/uploads/movies/${imageName}/`;
+      } else {
+        return '';
       }
     }
   },
-  beforeDestroy () {
+  mounted() {
+    window.addEventListener('hashchange', this.hashHandler);
+    this.hashHandler();
+  },
+  beforeDestroy() {
     window.removeEventListener('hashchange', this.hashHandler);
   },
   components: {
